@@ -52,7 +52,7 @@ SECTIONS
 		__exidx_end = .;
 	} > ITCM  AT> FLASH
 
-	.data : {
+	.data _estack : {
 		*(.endpoint_queue)   
 		*(SORT_BY_ALIGNMENT(SORT_BY_NAME(.rodata*)))
 		*(SORT_BY_ALIGNMENT(SORT_BY_NAME(.data*)))
@@ -62,8 +62,12 @@ SECTIONS
 	.bss ALIGN(4) : {
 		*(SORT_BY_ALIGNMENT(SORT_BY_NAME(.bss*)))
 		*(SORT_BY_ALIGNMENT(SORT_BY_NAME(COMMON)))
-		. = ALIGN(32);
-		. = . + 32; /* MPU to trap stack overflow */
+	} > DTCM
+	
+	.stack ORIGIN(DTCM) (NOLOAD) : {
+		. = . + LENGTH(DTCM) - _itcm_block_size - SIZEOF(.bss) - SIZEOF(.data) - 4095;
+		. = ALIGN(4096);
+		_estack = .;
 	} > DTCM
 
 	.bss.dma (NOLOAD) : {
@@ -102,8 +106,8 @@ SECTIONS
 	_extram_end = ADDR(.bss.extram) + SIZEOF(.bss.extram);
 
 	_itcm_block_count = (SIZEOF(.text.itcm) + SIZEOF(.ARM.exidx) + 0x7FFF) >> 15;
+	_itcm_block_size = (_itcm_block_count << 15);
 	_flexram_bank_config = 0xAAAAAAAA | ((1 << (_itcm_block_count * 2)) - 1);
-	_estack = ORIGIN(DTCM) + ((16 - _itcm_block_count) << 15);
 
 	_flashimagelen = __text_csf_end - ORIGIN(FLASH);
 	_teensy_model_identifier = 0x25;
