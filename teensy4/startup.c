@@ -48,12 +48,10 @@ struct smalloc_pool extmem_smalloc_pool;
 #endif
 
 extern int main (void);
-FLASHMEM void startup_default_early_hook(void) {}
-void startup_early_hook(void)	__attribute__ ((weak, alias("startup_default_early_hook")));
-FLASHMEM void startup_default_middle_hook(void) {}
-void startup_middle_hook(void)	__attribute__ ((weak, alias("startup_default_middle_hook")));
-FLASHMEM void startup_default_late_hook(void) {}
-void startup_late_hook(void)	__attribute__ ((weak, alias("startup_default_late_hook")));
+FLASHMEM void startup_default_hook(void) {}
+void startup_early_hook(void)	__attribute__ ((weak, alias("startup_default_hook")));
+void startup_middle_hook(void)	__attribute__ ((weak, alias("startup_default_hook")));
+void startup_late_hook(void)	__attribute__ ((weak, alias("startup_default_hook")));
 extern void startup_debug_reset(void) __attribute__((noinline));
 FLASHMEM void startup_debug_reset(void) { __asm__ volatile("nop"); }
 
