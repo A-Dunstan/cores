@@ -322,20 +322,34 @@ FLASHMEM void configure_cache(void)
 	// hardware: https://forum.pjrc.com/index.php?threads/73898/#post-334041
 	// software: https://github.com/mjs513/SDRAM_t4
 
-	asm("nop"); // allow a few cycles for bus writes before enable MPU
-	asm("nop");
-	asm("nop");
-	asm("nop");
-	asm("nop");
+	// clear remaining regions
+	while (i < 16)
+	{
+		SCB_MPU_RNR = i++;
+		SCB_MPU_RASR = 0; // disable
+	}
+
+	asm("nop;nop;nop;nop;nop");
+	asm("dsb;isb");
 	SCB_MPU_CTRL = SCB_MPU_CTRL_ENABLE;
 
+	asm("dsb;isb");
+	// reset branch prediction
+	SCB_CACHE_BPIALL = 0;
 	// cache enable, ARM DDI0403E, pg 628
-	asm("dsb");
-	asm("isb");
 	SCB_CACHE_ICIALLU = 0;
 
-	asm("dsb");
-	asm("isb");
+	// clean dcache before enabling
+	uint32_t set = 255;
+	do {
+		uint32_t way = 3;
+		do {
+			SCB_CACHE_DCISW = (way << 30) | (set << 5);
+		} while (way-->0);
+	} while (set-->0);
+
+
+	asm("dsb;isb");
 	SCB_CCR |= (SCB_CCR_IC | SCB_CCR_DC);
 }
 
@@ -401,7 +415,7 @@ FLASHMEM void configure_external_ram()
 
 	// turn on clock  (TODO: increase clock speed later, slow & cautious for first release)
 	CCM_CBCMR = (CCM_CBCMR & ~(CCM_CBCMR_FLEXSPI2_PODF_MASK | CCM_CBCMR_FLEXSPI2_CLK_SEL_MASK))
-		| CCM_CBCMR_FLEXSPI2_PODF(5) | CCM_CBCMR_FLEXSPI2_CLK_SEL(3); // 88 MHz
+		| CCM_CBCMR_FLEXSPI2_PODF(5) | CCM_CBCMR_FLEXSPI2_CLK_SEL(1); // 88 MHz
 	CCM_CCGR7 |= CCM_CCGR7_FLEXSPI2(CCM_CCGR_ON);
 
 	FLEXSPI2_MCR0 |= FLEXSPI_MCR0_MDIS;
