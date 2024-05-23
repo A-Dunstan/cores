@@ -56,3 +56,10 @@ extern "C" int main(void)
 #endif
 }
 
+namespace __gnu_cxx
+{
+	FLASHMEM void __verbose_terminate_handler()
+	{
+		abort();
+	}
+}
