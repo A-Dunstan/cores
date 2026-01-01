@@ -70,6 +70,7 @@ extern float tempmonGetTemp(void);
 extern unsigned long rtc_get(void);
 uint32_t set_arm_clock(uint32_t frequency); // clockspeed.c
 extern void __libc_init_array(void); // C++ standard library
+extern void configure_flexspi(void);
 
 uint8_t external_psram_size = 0;
 #ifdef ARDUINO_TEENSY41
@@ -216,6 +217,7 @@ static void ResetHandler2(void)
 	printf("test %d %d %d\n", 1, -1234567, 3);
 
 	configure_cache();
+	configure_flexspi();
 	configure_systick();
 	usb_pll_start();	
 #ifdef F_CPU
