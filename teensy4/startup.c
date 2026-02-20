@@ -505,7 +505,7 @@ FLASHMEM void configure_external_ram()
 		| FLEXSPI_MCR2_RESUMEWAIT(0x20) /*| FLEXSPI_MCR2_SAMEDEVICEEN*/;
 
 #define USE_PREFETCH
-#define LIMIT_PREFETCH_SIZE		
+#define LIMIT_PREFETCH_SIZE	// needed for ISSI 16MB part	
 
 #if !defined(USE_PREFETCH)
 	// align burst start address; no prefetch, bufferable write, or cacheable read
@@ -533,14 +533,18 @@ FLASHMEM void configure_external_ram()
 		| FLEXSPI_AHBRXBUFCR0_MSTRID_MASK | FLEXSPI_AHBRXBUFCR0_BUFSZ_MASK);
 
 	// BUFSZ is measured in 64-bits, so 8 -> 512 bits = 64 bytes
-	// No apparent speed gain with BUFSZ(4); 16 gives PSRAM test failures
-	// with ISSI 16MB 
+	// No apparent speed gain with BUFSZ(4); 16 gives PSRAM test 
+	// failures with ISSI 16MB
 	FLEXSPI2_AHBRXBUF0CR0 = (FLEXSPI2_AHBRXBUF0CR0 & ~mask)
-		| FLEXSPI_AHBRXBUFCR0_PREFETCHEN | FLEXSPI_AHBRXBUFCR0_BUFSZ(8);
+		| FLEXSPI_AHBRXBUFCR0_PREFETCHEN // enable...
+		| FLEXSPI_AHBRXBUFCR0_MSTRID(0)  // ...for CPU
+		| FLEXSPI_AHBRXBUFCR0_BUFSZ(8); 
 	FLEXSPI2_AHBRXBUF1CR0 = (FLEXSPI2_AHBRXBUF0CR0 & ~mask)
-		| FLEXSPI_AHBRXBUFCR0_PREFETCHEN | FLEXSPI_AHBRXBUFCR0_BUFSZ(8);
-	FLEXSPI2_AHBRXBUF2CR0 = mask;
-	FLEXSPI2_AHBRXBUF3CR0 = mask;
+		| FLEXSPI_AHBRXBUFCR0_PREFETCHEN // enable... 
+		| FLEXSPI_AHBRXBUFCR0_MSTRID(1)  // ...for eDMA
+		| FLEXSPI_AHBRXBUFCR0_BUFSZ(8);
+	FLEXSPI2_AHBRXBUF2CR0 = 0; // mask;
+	FLEXSPI2_AHBRXBUF3CR0 = 0; // mask;
 #else
 	FLEXSPI2_AHBRXBUF0CR0 = 0;
 	FLEXSPI2_AHBRXBUF1CR0 = 0;
